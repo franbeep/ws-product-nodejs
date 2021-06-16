@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const pg = require('pg');
+const cors = require('cors');
 const {
   rateLimitHandlerV1,
   rateLimitHandlerV2,
@@ -33,6 +34,8 @@ const apiRouteHandler = (req, res, next) => {
       return rateLimitHandlerV2(req, res, next);
   }
 };
+
+app.use(cors());
 
 // endpoints
 
