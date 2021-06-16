@@ -43,23 +43,21 @@ app.get('/', (req, res) => {
   res.send('Welcome to EQ Works 😊!');
 });
 
-app.get('/test', (req, res, next) => {
-  console.log(req.query);
-});
-
 app.get(
   '/events/hourly',
   (req, res, next) => {
     let range = '';
     if (req.query.startDate && req.query.endDate) {
-      range = `WHERE date >= ${req.query.startDate} AND date <= ${req.query.endDate}`;
+      range = `WHERE date >= '${req.query.startDate}' AND date <= '${req.query.endDate}'`;
+    } else if (req.query.startDate) {
+      range = `WHERE date = '${req.query.startDate}'`;
     }
     req.sqlQuery = `
     SELECT date, hour, events
     FROM public.hourly_events
     ${range}
     ORDER BY date, hour
-    LIMIT 100;
+    LIMIT 50;
   `;
     return next();
   },
@@ -72,7 +70,9 @@ app.get(
   (req, res, next) => {
     let range = '';
     if (req.query.startDate && req.query.endDate) {
-      range = `WHERE date >= ${req.query.startDate} AND date <= ${req.query.endDate}`;
+      range = `WHERE date >= '${req.query.startDate}' AND date <= '${req.query.endDate}'`;
+    } else if (req.query.startDate) {
+      range = `WHERE date = '${req.query.startDate}'`;
     }
     req.sqlQuery = `
     SELECT date, SUM(events) AS events
@@ -91,11 +91,18 @@ app.get(
 app.get(
   '/stats/hourly',
   (req, res, next) => {
+    let range = '';
+    if (req.query.startDate && req.query.endDate) {
+      range = `WHERE date >= '${req.query.startDate}' AND date <= '${req.query.endDate}'`;
+    } else if (req.query.startDate) {
+      range = `WHERE date = '${req.query.startDate}'`;
+    }
     req.sqlQuery = `
     SELECT date, hour, impressions, clicks, revenue
     FROM public.hourly_stats
+    ${range}
     ORDER BY date, hour
-    LIMIT 100;
+    LIMIT 50;
   `;
     return next();
   },
@@ -106,12 +113,19 @@ app.get(
 app.get(
   '/stats/daily',
   (req, res, next) => {
+    let range = '';
+    if (req.query.startDate && req.query.endDate) {
+      range = `WHERE date >= '${req.query.startDate}' AND date <= '${req.query.endDate}'`;
+    } else if (req.query.startDate) {
+      range = `WHERE date = '${req.query.startDate}'`;
+    }
     req.sqlQuery = `
     SELECT date,
         SUM(impressions) AS impressions,
         SUM(clicks) AS clicks,
         SUM(revenue) AS revenue
     FROM public.hourly_stats
+    ${range}
     GROUP BY date
     ORDER BY date
     LIMIT 20;

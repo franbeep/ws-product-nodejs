@@ -3,10 +3,8 @@ const Redis = require('ioredis');
 const { getClientIp } = require('request-ip');
 const moment = require('moment');
 
-const maxTokens = 3;
+const maxTokens = 15;
 const interval = 60 * 1000;
-
-const debug = msg => console.log(`[DEBUG] ${msg}`);
 
 /**
  * Solution 1: Adapted solutioon from this guide: https://levelup.gitconnected.com/rate-limiting-your-serverless-applications-d718da5710d0
@@ -15,7 +13,6 @@ const debug = msg => console.log(`[DEBUG] ${msg}`);
  * @param {NextFunction} next Next function in the pipeline
  */
 const rateLimitHandlerV1 = async (req, res, next) => {
-  console.log('[DEBUG] Using rateLimitHandlerV1...');
   // init redis server
   const redis = new Redis(
     `redis://redis:${process.env.REDISPASSWORD}@${process.env.REDISHOST}:${process.env.REDISPORT}/0`
@@ -33,7 +30,6 @@ const rateLimitHandlerV1 = async (req, res, next) => {
   // otherwise go to the next function of the pipeline
   const clientIp = getClientIp(req) || 'Unknown IP';
   const tokens = await rateLimiter.get({ id: clientIp });
-  console.log(tokens);
   if (tokens.remaining <= 0) {
     return res
       .status(429)
@@ -139,7 +135,6 @@ const rateLimitHandlerV2 = async (req, res, next) => {
  * @returns
  */
 const rateLimitHandlerV3 = async (req, res, next) => {
-  console.log('[DEBUG] Using rateLimitHandlerV3...');
   // init redis server
   const redis = new Redis(
     `redis://redis:${process.env.REDISPASSWORD}@${process.env.REDISHOST}:${process.env.REDISPORT}/0`
