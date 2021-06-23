@@ -3,7 +3,7 @@ const Redis = require('ioredis');
 const { getClientIp } = require('request-ip');
 const moment = require('moment');
 
-const maxTokens = 15;
+const maxTokens = 3;
 const interval = 60 * 1000;
 
 /**
@@ -17,6 +17,7 @@ const rateLimitHandlerV1 = async (req, res, next) => {
   const redis = new Redis(
     `redis://redis:${process.env.REDISPASSWORD}@${process.env.REDISHOST}:${process.env.REDISPORT}/0`
   );
+  redis.quit();
 
   // init rate limiter
   const rateLimiter = new RateLimiter({
@@ -31,6 +32,7 @@ const rateLimitHandlerV1 = async (req, res, next) => {
   const clientIp = getClientIp(req) || 'Unknown IP';
   const tokens = await rateLimiter.get({ id: clientIp });
   if (tokens.remaining <= 0) {
+    redis.quit();
     return res
       .status(429)
       .json({ message: 'You may only request 3 times per minute.' });
@@ -41,6 +43,7 @@ const rateLimitHandlerV1 = async (req, res, next) => {
     'X-RateLimit-Remaining': tokens.remaining - 1,
     'X-RateLimit-Reset': tokens.reset,
   });
+  redis.quit();
   return next();
 };
 
@@ -75,6 +78,7 @@ const rateLimitHandlerV2 = async (req, res, next) => {
       'X-RateLimit-Remaining': 56,
       // 'X-RateLimit-Reset': Math.floor(today.format("X") + interval / 1000)
     });
+    redis.quit();
     return next();
   }
 
@@ -105,10 +109,12 @@ const rateLimitHandlerV2 = async (req, res, next) => {
       //   moment(timestamps[0]).format('X') + interval / 1000
       // ),
     });
+    redis.quit();
     return next();
   }
 
   // otherwise send status 429 with a message
+  redis.quit();
   return res
     .status(429)
     .json({ message: 'You may only request 3 times per minute.' });
@@ -132,7 +138,6 @@ const rateLimitHandlerV2 = async (req, res, next) => {
  * @param {Request} req Request Object
  * @param {Response} res Response Object
  * @param {NextFunction} next Next function in the pipeline
- * @returns
  */
 const rateLimitHandlerV3 = async (req, res, next) => {
   // init redis server
@@ -161,6 +166,7 @@ const rateLimitHandlerV3 = async (req, res, next) => {
       //     interval / 1000
       // ),
     });
+    redis.quit();
     return next();
   }
 
@@ -177,10 +183,12 @@ const rateLimitHandlerV3 = async (req, res, next) => {
       'X-RateLimit-Remaining': maxTokens - 1,
       // 'X-RateLimit-Reset': Math.floor(today.format('X') + interval / 1000),
     });
+    redis.quit();
     return next();
   }
 
   // otherwise send status 429 with a message
+  redis.quit();
   return res
     .status(429)
     .json({ message: 'You may only request 3 times per minute.' });
