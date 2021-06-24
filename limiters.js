@@ -35,7 +35,7 @@ const rateLimitHandlerV1 = async (req, res, next) => {
     redis.quit();
     return res
       .status(429)
-      .json({ message: 'You may only request 3 times per minute.' });
+      .json({ message: `You may only request ${maxTokens} times per minute.` });
   }
   // set rate limiting headers
   res.set({
@@ -119,7 +119,7 @@ const rateLimitHandlerV2 = async (req, res, next) => {
   redis.quit();
   return res
     .status(429)
-    .json({ message: 'You may only request 3 times per minute.' });
+    .json({ message: `You may only request ${maxTokens} times per minute.` });
 };
 
 /**
@@ -195,7 +195,7 @@ const rateLimitHandlerV3 = async (req, res, next) => {
   redis.quit();
   return res
     .status(429)
-    .json({ message: 'You may only request 3 times per minute.' });
+    .json({ message: `You may only request ${maxTokens} times per minute.` });
 };
 
 /**
