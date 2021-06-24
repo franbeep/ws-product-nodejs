@@ -3,7 +3,7 @@ const Redis = require('ioredis');
 const { getClientIp } = require('request-ip');
 const moment = require('moment');
 
-const maxTokens = 3;
+const maxTokens = 15;
 const interval = 60 * 1000;
 
 /**
@@ -50,6 +50,8 @@ const rateLimitHandlerV1 = async (req, res, next) => {
 /**
  * Solution 2: Simple algorithm to throttle connection based on the number
  * of requests in specified interval of time
+ * obs: needs restricting redis connections to 1 per IP
+ *
  * @param {Request} req Request Object
  * @param {Response} res Response Object
  * @param {NextFunction} next Next function in the pipeline
@@ -135,6 +137,8 @@ const rateLimitHandlerV2 = async (req, res, next) => {
  * of tokens would be 1 (since in the last minute we still had those last
  * two), however it will reset to 3 tokens because it can only notice the
  * first request timestamp.
+ * obs: needs restricting redis connections to 1 per IP
+ *
  * @param {Request} req Request Object
  * @param {Response} res Response Object
  * @param {NextFunction} next Next function in the pipeline
